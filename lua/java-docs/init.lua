@@ -6,12 +6,13 @@ function M.setup(options)
   config.setup(options)
   
   vim.api.nvim_create_autocmd("LspAttach", {
+    group = vim.api.nvim_create_augroup("java-docs-lsp-attach", { clear = true }),
     callback = function(args)
       local client = vim.lsp.get_client_by_id(args.data.client_id)
       if client and client.name == "jdtls" then
         -- Override the hover handler for this client instance
         client.handlers["textDocument/hover"] = renderer.hover_handler
-        -- vim.notify("java-docs attached to jdtls", vim.log.levels.INFO)
+        vim.notify("java-docs: Attached to jdtls", vim.log.levels.INFO)
       end
     end,
   })
