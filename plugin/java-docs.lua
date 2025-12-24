@@ -1,0 +1,2 @@
+-- Plugin entry point
+-- The user will call require("java-docs").setup() in their config
