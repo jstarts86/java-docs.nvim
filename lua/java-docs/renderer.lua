@@ -6,6 +6,19 @@ local config = require("java-docs.config")
 local function clean_html(text)
   if not text then return "" end
   
+  -- Javadoc tags
+  text = text:gsub("{@link%s+([^}]+)}", "`%1`")
+  text = text:gsub("{@linkplain%s+([^}]+)}", "`%1`")
+  text = text:gsub("{@code%s+([^}]+)}", "`%1`")
+  text = text:gsub("{@literal%s+([^}]+)}", "`%1`")
+  text = text:gsub("{@value%s+([^}]+)}", "`%1`")
+  
+  -- Headers
+  text = text:gsub("<h[1-6]>(.-)</h[1-6]>", "### %1\n")
+  
+  -- Links
+  text = text:gsub("<a%s+href=['\"](.-)['\"]>(.-)</a>", "[%2](%1)")
+  
   -- Simple replacements
   text = text:gsub("<b>(.-)</b>", "**%1**")
   text = text:gsub("<strong>(.-)</strong>", "**%1**")
@@ -13,17 +26,21 @@ local function clean_html(text)
   text = text:gsub("<em>(.-)</em>", "*%1*")
   text = text:gsub("<code>(.-)</code>", "`%1`")
   text = text:gsub("<pre>(.-)</pre>", "\n```java\n%1\n```\n")
+  text = text:gsub("<tt>(.-)</tt>", "`%1`")
   
   -- Lists
   text = text:gsub("<li>", "- ")
   text = text:gsub("</li>", "")
   text = text:gsub("<ul>", "")
   text = text:gsub("</ul>", "")
+  text = text:gsub("<ol>", "")
+  text = text:gsub("</ol>", "")
   
-  -- Paragraphs
+  -- Paragraphs and Breaks
   text = text:gsub("<p>", "\n\n")
   text = text:gsub("</p>", "")
-  text = text:gsub("<br/?>", "\n")
+  text = text:gsub("<br%s*/?>", "\n")
+  text = text:gsub("<hr%s*/?>", "\n---\n")
   
   -- Strip remaining tags
   text = text:gsub("<[^>]+>", "")
@@ -33,6 +50,8 @@ local function clean_html(text)
   text = text:gsub("&gt;", ">")
   text = text:gsub("&amp;", "&")
   text = text:gsub("&nbsp;", " ")
+  text = text:gsub("&quot;", "\"")
+  text = text:gsub("&apos;", "'")
   
   return text
 end
@@ -40,7 +59,14 @@ end
 local function clean_jdt_links(text)
   -- Replace [ClassName](jdt://...) with `ClassName`
   -- Pattern: %[(.-)%]%(jdt://.-%)
-  return text:gsub("%[([%w%.]+)%]%(jdt://[^%)]+%)", "`%1`")
+  -- We use a non-greedy match for the content inside []
+  -- And we try to match until the closing ) of the URL.
+  -- Since Lua patterns don't support balanced parens, we assume the URL doesn't contain )
+  -- OR we can just strip the whole link if we find jdt://
+  
+  -- Iterate to handle multiple links
+  local result = text:gsub("%[([%w%.%s]+)%]%(jdt://[^%)]+%)", "`%1`")
+  return result
 end
 
 ---@param lines string[]

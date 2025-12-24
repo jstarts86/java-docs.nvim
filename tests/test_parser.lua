@@ -91,3 +91,27 @@ local input3_jdtls = {
 run_test("JDT Link Handling", input3_jdtls, {
   "Returns an instance of `String`." -- We want to strip the jdt link and maybe code-ify it
 })
+
+-- Test 4: Real World Path Example
+local input4 = {
+  "A `Path` defines the [getFileName](jdt://contents/java.base/java.nio.file/Path.class?=code-grapher/%5C/Users%5C/john%5C/Library%5C/Java%5C/JavaVirtualMachines%5C/corretto-22.0.2%5C/Contents%5C/Home%5C/lib%5C/jrt-fs.jar%60java.base=/javadoc_location=/https:%5C/%5C/docs.oracle.com%5C/en%5C/java%5C/javase%5C/22%5C/docs%5C/api%5C/=/=/maven.pomderived=/true=/%3Cjava.nio.file%28Path.class#250) method."
+}
+
+run_test("Real World Path", input4, {
+  "A `Path` defines the `getFileName` method."
+})
+
+-- Test 5: Multiple links and Javadoc tags
+local input5 = {
+  "See {@link String} and {@code int}.",
+  "Also <a href='http://example.com'>Example</a>.",
+  "<h3>Header</h3>",
+  "Check [link1](jdt://foo) and [link2](jdt://bar)."
+}
+
+run_test("Complex Tags", input5, {
+  "See `String` and `int`.",
+  "Also [Example](http://example.com).", -- or just Example
+  "### Header",
+  "Check `link1` and `link2`."
+})
